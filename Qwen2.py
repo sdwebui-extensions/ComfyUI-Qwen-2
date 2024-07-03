@@ -2,7 +2,9 @@ import torch
 import os
 import io
 from io import BytesIO
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import folder_paths
+AutoModelForCausalLM = None
+AutoTokenizer = None
 
 device = "cuda"
 
@@ -24,12 +26,20 @@ class Qwen2_ModelLoader_Zho:
     CATEGORY = "⛱️Qwen2"
   
     def load_model(self, model_name):
+        global AutoModelForCausalLM, AutoTokenizer
+        if AutoModelForCausalLM is None or AutoTokenizer is None:
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+        model_path = os.path.join(folder_paths.models_dir, model_name)
+        if not os.path.exists(model_path) and os.path.exists(os.path.join("/stable-diffusion-cache/models", model_name)):
+            model_path = os.path.join("/stable-diffusion-cache/models", model_name)
+        else:
+            model_path = model_name
         model = AutoModelForCausalLM.from_pretrained(
-            model_name, 
+            model_path, 
             device_map="cuda", 
             torch_dtype="auto", 
         )
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
         return model, tokenizer
 
 
